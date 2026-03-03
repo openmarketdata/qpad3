@@ -1,0 +1,33 @@
+{
+    "name": "qweb3",
+    "version": "1.0.0",
+    "description": "A webpack 5 compatible package targeting ESM",
+    "main": "dist/index.js",
+    "type": "module",
+    "scripts": {
+        "build": "webpack --config webpack.config.mjs",
+        "clean": "rm -rf dist"
+    },
+    "devDependencies": {
+        "buffer": "^6.0.3",
+        "css-loader": "^7.1.2",
+        "html-webpack-plugin": "^5.6.3",
+        "style-loader": "^4.0.0",
+        "webpack": "^5.99.9",
+        "webpack-cli": "^6.0.1"
+    },
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "@codemirror/autocomplete": "^6.20.0",
+        "@codemirror/commands": "^6.10.2",
+        "@codemirror/lang-javascript": "^6.2.4",
+        "@codemirror/language": "^6.12.2",
+        "@codemirror/search": "^6.6.0",
+        "@codemirror/state": "^6.5.4",
+        "@codemirror/view": "^6.39.15",
+        "@lezer/highlight": "^1.2.3",
+        "@lezer/lr": "^1.4.8",
+        "codemirror": "^6.0.2"
+    }
+}

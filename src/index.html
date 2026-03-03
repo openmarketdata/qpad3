@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Q Webpack Example</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            html, body { height: 100%; overflow: hidden; background: #1e1e1e; color: #ccc; font-family: sans-serif; }
+            .wrapper {
+                display: flex;
+                height: 100%;
+                width: 100%;
+            }
+            .one {
+                flex: 0 0 420px;
+                min-width: 200px;
+                display: flex;
+                flex-direction: column;
+                border-right: 1px solid #3c3c3c;
+                background: #282c34;
+            }
+            #editor-container {
+                flex: 1 1 auto;
+                overflow: hidden;
+            }
+            #editor-container .cm-editor {
+                height: 100%;
+            }
+            .two {
+                flex: 1 1 auto;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            #viewer-container {
+                flex: 1 1 auto;
+                overflow: hidden;
+            }
+            #viewer-container .cm-editor {
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="one">
+                <div id="editor-container"></div>
+            </div>
+            <div class="two">
+                <div id="viewer-container"></div>
+            </div>
+        </div>
+    </body>
+</html>
