@@ -11,9 +11,8 @@ Browser-based IDE for [kdb+/q](https://code.kx.com/q/). Connects directly to a r
 
 ## Roadmap
 
-- **Data visualization panel** — tabbed pane alongside the REPL viewer for rendering charts and grids from q query results
-- **Charting library integration** — interactive time-series, bar, scatter, and candlestick charts driven by q table data
-- **Visual panel tabs** — switch between REPL output, chart view, and grid view within the right pane
+- **Data visualization panel** — tabbed pane alongside the REPL viewer for rendering charts and grids from q query results using @finos/perspective javascript client, expose the grid to a global variable 'psp' and data update is handled by function psp.update
+- **Visual panel tabs** — switch between REPL output and grid view within the right pane
 
 ## Prerequisites
 

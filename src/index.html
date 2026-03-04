@@ -33,11 +33,42 @@
                 flex-direction: column;
                 overflow: hidden;
             }
+            .tab-bar {
+                display: flex;
+                flex: 0 0 auto;
+                background: #21252b;
+                border-bottom: 1px solid #3c3c3c;
+            }
+            .tab-bar .tab {
+                padding: 6px 16px;
+                cursor: pointer;
+                color: #6b717d;
+                font-size: 12px;
+                font-family: sans-serif;
+                border-bottom: 2px solid transparent;
+                user-select: none;
+            }
+            .tab-bar .tab:hover {
+                color: #abb2bf;
+            }
+            .tab-bar .tab.tab-active {
+                color: #e5c07b;
+                border-bottom-color: #e5c07b;
+            }
             #viewer-container {
                 flex: 1 1 auto;
                 overflow: hidden;
             }
             #viewer-container .cm-editor {
+                height: 100%;
+            }
+            #grid-container {
+                flex: 1 1 auto;
+                overflow: hidden;
+                display: none;
+            }
+            #grid-container perspective-viewer {
+                width: 100%;
                 height: 100%;
             }
         </style>
@@ -48,7 +79,12 @@
                 <div id="editor-container"></div>
             </div>
             <div class="two">
+                <div class="tab-bar">
+                    <div class="tab tab-active" data-tab="repl">REPL</div>
+                    <div class="tab" data-tab="grid">Grid</div>
+                </div>
                 <div id="viewer-container"></div>
+                <div id="grid-container"></div>
             </div>
         </div>
     </body>

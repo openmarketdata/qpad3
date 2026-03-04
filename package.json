@@ -26,6 +26,11 @@
         "@codemirror/search": "^6.6.0",
         "@codemirror/state": "^6.5.4",
         "@codemirror/view": "^6.39.15",
+        "@finos/perspective": "^3.8.0",
+        "@finos/perspective-viewer": "^3.8.0",
+        "@finos/perspective-viewer-d3fc": "^3.8.0",
+        "@finos/perspective-viewer-datagrid": "^3.8.0",
+        "@finos/perspective-webpack-plugin": "^3.2.1",
         "@lezer/highlight": "^1.2.3",
         "@lezer/lr": "^1.4.8",
         "codemirror": "^6.0.2"

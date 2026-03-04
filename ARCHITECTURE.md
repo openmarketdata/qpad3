@@ -47,7 +47,8 @@ qweb3/
     ├── ipc.mjs               # q IPC binary protocol codec
     ├── lang-q.mjs            # CodeMirror 6 q language mode (syntax highlighting)
     ├── editor.mjs            # CodeMirror 6 code editor (left pane)
-    └── viewer.mjs            # CodeMirror 6 readonly REPL viewer (right pane)
+    ├── viewer.mjs            # CodeMirror 6 readonly REPL viewer (right pane)
+    └── grid.mjs              # Perspective data grid (right pane, Grid tab)
 ```
 
 ## Module Descriptions
@@ -225,9 +226,60 @@ A readonly CodeMirror 6 instance that displays the REPL session with custom gutt
 
 The viewer is exposed as `window.cm` so the q server can call functions like `cm.disp('=>', result)` or `cm.clear()` via `window.eval`.
 
-### 7. `src/index.html` — HTML Shell
+### 7. `src/grid.mjs` — Data Visualization Panel
 
-Two-pane flexbox layout:
+A Perspective-powered data grid and visualization panel for rendering interactive grids from q query results.
+
+| Aspect | Detail |
+|---|---|
+| **Library** | [@finos/perspective](https://perspective.finos.org/) JavaScript client — a high-performance WebAssembly-powered data grid and visualization engine. |
+| **Factory** | `createGrid(container)` — mounts a `<perspective-viewer>` element, returns an API object. |
+| **Global variable** | The grid instance is exposed as `window.psp` (paralleling `window.cm` for the REPL viewer), enabling q-side remote invocation via `window.eval`. |
+| **Data updates** | `psp.update(data)` — accepts column-oriented objects (matching the existing table representation from `ipc.mjs` with `Symbol.for('meta')` metadata). Strips symbol metadata before passing to Perspective. |
+| **Integration point** | `qws.mjs` message dispatch — when the q server pushes table data via `ui.update_wdr`, the handler routes it to `psp.update()`. |
+| **Webpack** | `@finos/perspective` and its WASM assets are bundled via Webpack 5 using `@finos/perspective-webpack-plugin`. |
+| **API** | `update(data)`, `clear()`, `getTable()`, `getViewer()` |
+
+#### Data Flow
+
+```
+q Server ──ws──▶ qws.mjs ──deserialize──▶ ipc.mjs
+                    │
+                    ├──▶ cm.disp()      (REPL viewer)
+                    └──▶ psp.update()   (Perspective grid)
+```
+
+### 8. Visual Panel Tabs
+
+A lightweight tab system switching between REPL output and grid view within the right pane (`.two`).
+
+| Aspect | Detail |
+|---|---|
+| **Tab bar** | A tab strip rendered above `#viewer-container` inside `.two`, with tabs for **REPL** and **Grid**. |
+| **Switching** | Clicking a tab toggles `display: none` on the inactive container and `display: flex` on the active one. No content is destroyed — both the CodeMirror viewer and Perspective grid remain mounted in the DOM. |
+| **HTML structure** | `#viewer-container` (existing REPL) and a new `#grid-container` (Perspective viewer) sit as siblings inside `.two`, below the tab bar. |
+| **Active tab state** | Managed via a CSS class (`.tab-active`) on the selected tab element; no framework state required. |
+| **Auto-switch** | When `psp.update()` receives new data, the grid tab auto-activates to surface results immediately. |
+
+#### Updated Layout
+
+```
+┌──────────────────────┬──────────────────────────────┐
+│  .one (420px fixed)  │  .two (flex: 1)              │
+│                      │  ┌──────┬──────┐             │
+│  #editor-container   │  │ REPL │ Grid │  ◀ tab bar  │
+│  (CodeMirror editor) │  ├──────┴──────┤             │
+│                      │  │ #viewer-container          │
+│                      │  │   OR                       │
+│                      │  │ #grid-container            │
+│                      │  │  (Perspective viewer)      │
+│                      │  └────────────────────────────│
+└──────────────────────┴──────────────────────────────┘
+```
+
+### 9. `src/index.html` — HTML Shell
+
+Two-pane flexbox layout with tab bar:
 
 ```
 ┌──────────────────────┬──────────────────────────────┐
@@ -251,6 +303,8 @@ Inline `<style>` sets dark background (`#1e1e1e`), full-height layout, and ensur
 | **buffer polyfill** | Provides Node.js `Buffer` API in the browser (`resolve.fallback`) |
 | **CodeMirror 6** | Code editor framework (`@codemirror/view`, `@codemirror/state`, `@codemirror/language`, etc.) |
 | **Lezer** | Syntax highlighting infrastructure (`@lezer/highlight`) |
+| **@finos/perspective** | WebAssembly-powered data grid and visualization engine |
+| **@finos/perspective-webpack-plugin** | Bundles Perspective WASM assets via Webpack 5 |
 
 ```
 src/index.mjs ───┐
@@ -258,7 +312,8 @@ src/qws.mjs ─────┤
 src/ipc.mjs ─────┤  webpack
 src/lang-q.mjs ──┤  ──────▶  dist/index.js + dist/index.html
 src/editor.mjs ──┤
-src/viewer.mjs ──┘
+src/viewer.mjs ──┤
+src/grid.mjs ────┘
 ```
 
 Build commands:
@@ -290,3 +345,5 @@ npm run clean    # rm -rf dist
 - **CodeMirror 6 for both editor and viewer** — shared language mode (`lang-q.mjs`) provides consistent q syntax highlighting across the editable code editor and readonly REPL output.
 - **Custom gutter markers** — `StateField` with `RangeSet` tracks per-line prompt types (`q)` / `=>`), with dedicated `addPrompt` / `clearPrompts` effects for clean state management.
 - **`window.cm` global** — the viewer is exposed as `window.cm` so the q server can call `cm.disp()`, `cm.clear()`, etc. via remote JS invocation (`window.eval`), maintaining compatibility with the q-side dispatch framework.
+
+

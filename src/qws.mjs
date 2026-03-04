@@ -88,7 +88,7 @@ class QWebSocket {
     if (msg) {
       const t = new Int8Array(msg.slice(0, 15));
       console.info("Deserializing type: " + t[8]);
-      this.buf0 = msg;
+      //this.buf0 = msg;
       this.buf = this.deserialize(msg);
       if (t[8] === 0 && t[14] === 101) {
         // msg in form (::;(function;args);(callback;args)), use :: as the magic byte to call js function

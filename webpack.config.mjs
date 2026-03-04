@@ -1,5 +1,9 @@
 import path from 'path'; // cjs: const path = require('path');
+import { createRequire } from 'module';
 import HtmlWebPackPlugin from 'html-webpack-plugin'; // Plugin to generate HTML
+
+const require = createRequire(import.meta.url);
+const PerspectivePlugin = require('@finos/perspective-webpack-plugin');
 
 export default {
   mode: 'production',
@@ -17,12 +21,12 @@ export default {
       scriptLoading: "blocking", // Load scripts in blocking mode
       template: './src/index.html'
     }),
+    new PerspectivePlugin(),
   ],
   module: {
     rules: [
       {
         test: /\.css$/,
-        exclude: /node_modules/,
         use: [{ loader: "style-loader" }, { loader: "css-loader" }],
       }
     ]
