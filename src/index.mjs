@@ -11,12 +11,12 @@ qconn.connect();
 // Mount the readonly Q viewer/REPL output in the right pane
 const viewerContainer = document.getElementById('viewer-container');
 const viewer = createViewer(viewerContainer);
-window.cm = viewer; // expose as global 'cm' for q server eval calls (cm.disp, etc.)
+window.viewer = viewer; // expose as global 'viewer' for q server eval calls (viewer.disp, etc.)
 
 // Mount the Perspective grid in the right pane (Grid tab)
 const gridContainer = document.getElementById('grid-container');
 const grid = createGrid(gridContainer);
-window.psp = grid; // expose as global 'psp' for q server eval calls (psp.update, etc.)
+window.grid = grid; // expose as global 'grid' for q server eval calls (grid.update, etc.)
 
 // Tab switching logic
 const tabBar = document.querySelector('.tab-bar');
@@ -33,7 +33,7 @@ tabBar.addEventListener('click', (e) => {
   if (tab) switchTab(tab.dataset.tab);
 });
 
-// Auto-switch to grid tab when data is pushed — wrap psp.update
+// Auto-switch to grid tab when data is pushed — wrap grid.update
 const origUpdate = grid.update.bind(grid);
 grid.update = async function(data) {
   await origUpdate(data);
@@ -48,16 +48,16 @@ const editor = createEditor(editorContainer, (code) => {
   qconn.send(qconn.serialize(code));
 });
 window.editor = editor;
-qconn.setEditor(viewer);
+qconn.setEditor(editor);
 
 // Expose switchTab for programmatic use
 window.switchTab = switchTab;
 
 // Define ui.update_wdr handler for q server grid data push
 // q sends (::;(`ui.update_wdr;data)) which invokes window.eval("ui.update_wdr")(data)
-window.ui = window.ui || {};
-window.ui.update_wdr = function(data) {
-  if (window.psp) {
-    window.psp.update(data);
-  }
-};
+// window.ui = window.ui || {};
+// window.ui.update_wdr = function(data) {
+//  if (window.grid) {
+//    window.grid.update(data);
+//  }
+//};

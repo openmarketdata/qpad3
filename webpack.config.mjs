@@ -18,7 +18,7 @@ export default {
   plugins: [
     new HtmlWebPackPlugin({
       title: "Perspective Webpack Example",
-      scriptLoading: "blocking", // Load scripts in blocking mode
+      scriptLoading: "module", // ESM output requires type="module" script tags
       template: './src/index.html'
     }),
     new PerspectivePlugin(),
