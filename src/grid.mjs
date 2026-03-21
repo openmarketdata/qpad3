@@ -22,6 +22,7 @@ export function createGrid(container) {
 
   let worker = null;
   let table = null;
+  let initPromise = null;  // serializes concurrent first-load calls
 
   /**
    * Lazily initialize the Perspective worker
@@ -35,7 +36,9 @@ export function createGrid(container) {
 
   /**
    * Convert q column-oriented table data into a Perspective-friendly format.
-   * Strips Symbol.for('meta') and Symbol.for('keys') metadata.
+   * - Strips Symbol.for('meta') and Symbol.for('keys') metadata.
+   * - Converts NaN (q numeric nulls) → null so Perspective accepts them.
+   * - Leaves Date objects and strings untouched.
    *
    * @param {object} data  Column-oriented object from ipc.mjs
    * @returns {object}     Plain column-oriented object safe for Perspective
@@ -43,7 +46,14 @@ export function createGrid(container) {
   function prepareData(data) {
     const clean = {};
     for (const key of Object.keys(data)) {
-      clean[key] = data[key];
+      const col = data[key];
+      if (Array.isArray(col)) {
+        clean[key] = col.map(v =>
+          (typeof v === 'number' && isNaN(v)) ? null : v
+        );
+      } else {
+        clean[key] = col;
+      }
     }
     return clean;
   }
@@ -84,8 +94,10 @@ export function createGrid(container) {
 
   return {
     /**
-     * Load or update the grid with new data.
-     * Creates a new table on first call, then updates in place.
+     * Load or update the grid with a deserialized q table.
+     * Accepts the column-oriented object produced by ipc.mjs, including
+     * Symbol.for('meta') metadata for schema inference.
+     * Creates a new Perspective table on first call, then updates in place.
      *
      * @param {object} data  Column-oriented q table object with Symbol.for('meta')
      */
@@ -93,18 +105,20 @@ export function createGrid(container) {
       const meta = data[Symbol.for('meta')];
       const clean = prepareData(data);
 
+      // Serialize concurrent init: only one table creation in flight at a time
       if (!table) {
-        const w = await getWorker();
-        if (meta) {
-          const schema = inferSchema(meta);
-          table = await w.table(schema);
-        } else {
-          table = await w.table(clean);
+        if (!initPromise) {
+          initPromise = (async () => {
+            const w = await getWorker();
+            const schema = meta ? inferSchema(meta) : clean;
+            table = await w.table(schema);
+            await viewer.load(table);
+          })();
         }
-        await viewer.load(table);
+        await initPromise;
       }
 
-      table.update(clean);
+      await table.update(clean);
     },
 
     /**

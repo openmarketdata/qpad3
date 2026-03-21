@@ -8,15 +8,25 @@ const qconn = new QWebSocket();
 window.qconn = qconn;
 qconn.connect();
 
+// Mount the Q code editor in the left pane
+const editorContainer = document.getElementById('editor-container');
+const editor = createEditor(editorContainer, (code) => {
+  console.log('Executing:', code);
+  viewer.appendInput(code);
+  qconn.send(qconn.serialize(code));
+});
+window.editor = editor;
+
 // Mount the readonly Q viewer/REPL output in the right pane
 const viewerContainer = document.getElementById('viewer-container');
 const viewer = createViewer(viewerContainer);
 window.viewer = viewer; // expose as global 'viewer' for q server eval calls (viewer.disp, etc.)
+qconn.setViewer(viewer);
 
 // Mount the Perspective grid in the right pane (Grid tab)
 const gridContainer = document.getElementById('grid-container');
 const grid = createGrid(gridContainer);
-window.grid = grid; // expose as global 'grid' for q server eval calls (grid.update, etc.)
+qconn.setGrid(grid); // expose as global 'grid' for q server eval calls (grid.update, etc.)
 
 // Tab switching logic
 const tabBar = document.querySelector('.tab-bar');
@@ -39,16 +49,6 @@ grid.update = async function(data) {
   await origUpdate(data);
   switchTab('grid');
 };
-
-// Mount the Q code editor in the left pane
-const editorContainer = document.getElementById('editor-container');
-const editor = createEditor(editorContainer, (code) => {
-  console.log('Executing:', code);
-  viewer.appendInput(code);
-  qconn.send(qconn.serialize(code));
-});
-window.editor = editor;
-qconn.setEditor(editor);
 
 // Expose switchTab for programmatic use
 window.switchTab = switchTab;
