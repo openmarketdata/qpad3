@@ -22,7 +22,7 @@ export function createGrid(container) {
 
   let worker = null;
   let table = null;
-  let initPromise = null;  // serializes concurrent first-load calls
+  let queue = Promise.resolve();  // serializes concurrent update() calls
 
   /**
    * Lazily initialize the Perspective worker
@@ -92,6 +92,51 @@ export function createGrid(container) {
     return schema;
   }
 
+  /**
+   * Returns true when the incoming schema differs from the table currently
+   * loaded in the viewer (different column names, count, or types). q sends
+   * meta on every table result, so type changes are detected too.
+   *
+   * @param {object} current   Current Perspective schema { col: type }
+   * @param {object} desired   Desired Perspective schema { col: type }
+   * @param {boolean} hasMeta  Whether q meta (and thus types) is available
+   */
+  function schemaChanged(current, desired, hasMeta) {
+    const curKeys = Object.keys(current);
+    const newKeys = Object.keys(desired);
+    if (curKeys.length !== newKeys.length) return true;
+    return newKeys.some((k, i) =>
+      k !== curKeys[i] || (hasMeta && current[k] !== desired[k])
+    );
+  }
+
+  /**
+   * Core update logic, always run serialized via the queue.
+   *
+   * @param {object} data  Column-oriented q table object with Symbol.for('meta')
+   */
+  async function applyUpdate(data) {
+    const meta = data[Symbol.for('meta')];
+    const clean = prepareData(data);
+    const desiredSchema = meta ? inferSchema(meta) : clean;
+
+    // (Re)create the table on first call or whenever the schema changes, so a
+    // new query with different columns replaces the grid instead of being
+    // silently dropped by table.update().
+    const recreate =
+      !table || schemaChanged(await table.schema(), desiredSchema, !!meta);
+
+    if (recreate) {
+      const w = await getWorker();
+      const next = await w.table(desiredSchema);
+      await viewer.load(next);
+      if (table) await table.delete();
+      table = next;
+    }
+
+    await table.update(clean);
+  }
+
   return {
     /**
      * Load or update the grid with a deserialized q table.
@@ -101,24 +146,11 @@ export function createGrid(container) {
      *
      * @param {object} data  Column-oriented q table object with Symbol.for('meta')
      */
-    async update(data) {
-      const meta = data[Symbol.for('meta')];
-      const clean = prepareData(data);
-
-      // Serialize concurrent init: only one table creation in flight at a time
-      if (!table) {
-        if (!initPromise) {
-          initPromise = (async () => {
-            const w = await getWorker();
-            const schema = meta ? inferSchema(meta) : clean;
-            table = await w.table(schema);
-            await viewer.load(table);
-          })();
-        }
-        await initPromise;
-      }
-
-      await table.update(clean);
+    update(data) {
+      // Serialize updates so concurrent calls can't race on (re)creating
+      // the table.
+      queue = queue.then(() => applyUpdate(data));
+      return queue;
     },
 
     /**
