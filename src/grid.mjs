@@ -35,9 +35,24 @@ export function createGrid(container) {
   }
 
   /**
+   * Render a nested q value (a list cell, e.g. a symbol or numeric vector)
+   * as a space-separated string. Perspective has no nested/list column type,
+   * so list cells must be flattened to text or the whole column is rejected.
+   *
+   * @param {Array} v  A list cell from a general (mixed) q column
+   * @returns {string}
+   */
+  function stringifyCell(v) {
+    return v
+      .map(e => (Array.isArray(e) ? stringifyCell(e) : e == null ? '' : String(e)))
+      .join(' ');
+  }
+
+  /**
    * Convert q column-oriented table data into a Perspective-friendly format.
    * - Strips Symbol.for('meta') and Symbol.for('keys') metadata.
    * - Converts NaN (q numeric nulls) → null so Perspective accepts them.
+   * - Flattens nested list cells to strings (Perspective has no list type).
    * - Leaves Date objects and strings untouched.
    *
    * @param {object} data  Column-oriented object from ipc.mjs
@@ -49,7 +64,9 @@ export function createGrid(container) {
       const col = data[key];
       if (Array.isArray(col)) {
         clean[key] = col.map(v =>
-          (typeof v === 'number' && isNaN(v)) ? null : v
+          Array.isArray(v) ? stringifyCell(v)
+            : (typeof v === 'number' && isNaN(v)) ? null
+            : v
         );
       } else {
         clean[key] = col;
