@@ -53,7 +53,15 @@ export function createGrid(container) {
    * - Strips Symbol.for('meta') and Symbol.for('keys') metadata.
    * - Converts NaN (q numeric nulls) → null so Perspective accepts them.
    * - Flattens nested list cells to strings (Perspective has no list type).
-   * - Leaves Date objects and strings untouched.
+   * - Splits char-typed columns into one single-char string per row.
+   * - Leaves Date objects untouched.
+   *
+   * A q char column (e.g. `c:"abc"`) is a char vector that ipc.mjs decodes to
+   * a single JS string ("abc"), not a per-row array. Perspective expects each
+   * column to be an array with one value per row, so a bare string is rejected
+   * and the whole row batch silently disappears. Splitting "abc" → ['a','b','c']
+   * gives the one-char-per-row column Perspective needs (count always matches,
+   * since a char vector has exactly one char per row).
    *
    * @param {object} data  Column-oriented object from ipc.mjs
    * @returns {object}     Plain column-oriented object safe for Perspective
@@ -62,7 +70,9 @@ export function createGrid(container) {
     const clean = {};
     for (const key of Object.keys(data)) {
       const col = data[key];
-      if (Array.isArray(col)) {
+      if (typeof col === 'string') {
+        clean[key] = col.split('');
+      } else if (Array.isArray(col)) {
         clean[key] = col.map(v =>
           Array.isArray(v) ? stringifyCell(v)
             : (typeof v === 'number' && isNaN(v)) ? null
