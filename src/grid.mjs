@@ -54,6 +54,33 @@ export function createGrid(container) {
       .join(' ');
   }
 
+  const pad = (n, w) => String(n).padStart(w, '0');
+
+  /**
+   * Format a q temporal value as its q text representation:
+   *   date `d`      -> yyyy.mm.dd
+   *   datetime `z`  -> yyyy.mm.ddTHH:MM:SS.fff
+   *   timestamp `p` -> yyyy.mm.ddDHH:MM:SS.fffffffff
+   *
+   * Date/datetime arrive as UTC-based Date objects; timestamps arrive as the
+   * nanosecond ISO string produced by ipc when includeNanosecond is set
+   * (e.g. "2024-01-15T10:30:00.123456789").
+   *
+   * @param {Date|string|null} v  Decoded temporal cell
+   * @param {string} t            q type char ('d' | 'z' | 'p')
+   * @returns {string|null}
+   */
+  function qTemporal(v, t) {
+    if (v == null || v === '') return null;
+    if (t === 'p') {
+      const i = v.indexOf('T');
+      return v.slice(0, i).replace(/-/g, '.') + 'D' + v.slice(i + 1);
+    }
+    const ymd = `${v.getUTCFullYear()}.${pad(v.getUTCMonth() + 1, 2)}.${pad(v.getUTCDate(), 2)}`;
+    if (t === 'd') return ymd;
+    return `${ymd}T${pad(v.getUTCHours(), 2)}:${pad(v.getUTCMinutes(), 2)}:${pad(v.getUTCSeconds(), 2)}.${pad(v.getUTCMilliseconds(), 3)}`;
+  }
+
   /**
    * Convert q column-oriented table data into a Perspective-friendly format.
    * - Strips Symbol.for('meta') and Symbol.for('keys') metadata.
@@ -72,11 +99,16 @@ export function createGrid(container) {
    * @param {object} data  Column-oriented object from ipc.mjs
    * @returns {object}     Plain column-oriented object safe for Perspective
    */
-  function prepareData(data) {
+  function prepareData(data, meta) {
+    const types = {};
+    if (meta) for (let i = 0; i < meta.c.length; i++) types[meta.c[i]] = meta.t[i];
     const clean = {};
     for (const key of Object.keys(data)) {
       const col = data[key];
-      if (typeof col === 'string') {
+      const t = types[key];
+      if ((t === 'd' || t === 'z' || t === 'p') && Array.isArray(col)) {
+        clean[key] = col.map(v => qTemporal(v, t));
+      } else if (typeof col === 'string') {
         clean[key] = col.split('');
       } else if (Array.isArray(col)) {
         clean[key] = col.map(v =>
@@ -110,10 +142,10 @@ export function createGrid(container) {
       'f': 'float',       // float
       'c': 'string',      // char
       's': 'string',      // symbol
-      'p': 'datetime',    // timestamp
+      'p': 'string',      // timestamp (rendered in q text form)
       'm': 'date',        // month
-      'd': 'date',        // date
-      'z': 'datetime',    // datetime
+      'd': 'string',      // date (rendered in q text form)
+      'z': 'string',      // datetime (rendered in q text form)
       'n': 'string',      // timespan
       'u': 'string',      // minute
       'v': 'string',      // second
@@ -150,7 +182,7 @@ export function createGrid(container) {
    */
   async function applyUpdate(data) {
     const meta = data[Symbol.for('meta')];
-    const clean = prepareData(data);
+    const clean = prepareData(data, meta);
     const desiredSchema = meta ? inferSchema(meta) : clean;
 
     // (Re)create the table on first call or whenever the schema changes, so a

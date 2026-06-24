@@ -589,7 +589,10 @@ class QWebSocket {
     }
   }
 
-  deserialize(msg) { return deserialize(msg); }
+  // includeNanosecond keeps q timestamps at full nanosecond precision (decoded
+  // as an ISO ns string) instead of collapsing to a millisecond JS Date, so the
+  // grid can render them as `yyyy.mm.ddDHH:MM:SS.fffffffff`.
+  deserialize(msg) { return deserialize(msg, false, true); }
   serialize(data)  { return serialize(data); }
 }
 
