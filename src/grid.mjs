@@ -9,6 +9,11 @@ import perspective from '@finos/perspective';
 import '@finos/perspective-viewer';
 import '@finos/perspective-viewer-datagrid';
 import '@finos/perspective-viewer-d3fc';
+// Perspective ships its toolbar icons and button styling as CSS custom
+// properties (base64 data-URIs) defined by a theme stylesheet. Without a theme
+// loaded the icon/button slots render as bare red placeholder blocks, so the
+// dark theme is bundled and applied to match the rest of the app.
+import '@finos/perspective-viewer/dist/css/pro-dark.css';
 
 /**
  * Create and mount a Perspective grid viewer
@@ -18,6 +23,7 @@ import '@finos/perspective-viewer-d3fc';
  */
 export function createGrid(container) {
   const viewer = document.createElement('perspective-viewer');
+  viewer.setAttribute('theme', 'Pro Dark');
   container.appendChild(viewer);
 
   let worker = null;
