@@ -14,9 +14,6 @@ const editor = createEditor(editorContainer, (code) => {
   console.log('Executing:', code);
   viewer.appendInput(code);
   qconn.send(qconn.serialize(code));
-  // A `.ws.grid` call pushes data to the grid and auto-switches to the Grid
-  // tab. Any other command produces REPL output, so switch back to REPL.
-  if (!/\.ws\.grid\b/.test(code)) switchTab('repl');
 });
 window.editor = editor;
 
@@ -46,11 +43,21 @@ tabBar.addEventListener('click', (e) => {
   if (tab) switchTab(tab.dataset.tab);
 });
 
-// Auto-switch to grid tab when data is pushed — wrap grid.update
+// Drive the active tab from the server's response, not the typed command:
+//  - a grid frame (grid.update) shows the Grid tab
+//  - a REPL result (viewer.disp '=>') shows the REPL tab
+// A `.ws.grid` call emits both a grid frame and a trailing `=> ::` echo; the
+// `::` echo carries no result, so it must not pull focus back to the REPL.
 const origUpdate = grid.update.bind(grid);
 grid.update = async function(data) {
   await origUpdate(data);
   switchTab('grid');
+};
+
+const origDisp = viewer.disp.bind(viewer);
+viewer.disp = function(prompt, value) {
+  origDisp(prompt, value);
+  if (prompt === '=>' && value !== '::' && value !== '::\n') switchTab('repl');
 };
 
 // Expose switchTab for programmatic use
