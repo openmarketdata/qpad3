@@ -14,6 +14,9 @@ const editor = createEditor(editorContainer, (code) => {
   console.log('Executing:', code);
   viewer.appendInput(code);
   qconn.send(qconn.serialize(code));
+  // A `.ws.grid` call pushes data to the grid and auto-switches to the Grid
+  // tab. Any other command produces REPL output, so switch back to REPL.
+  if (!/\.ws\.grid\b/.test(code)) switchTab('repl');
 });
 window.editor = editor;
 
