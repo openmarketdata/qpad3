@@ -59,6 +59,13 @@ grid.update = async function(data) {
   switchTab('grid');
 };
 
+const origAppend = grid.append.bind(grid);
+grid.append = async function(data) {
+  gridFrameForThisResult = true;
+  await origAppend(data);
+  switchTab('grid');
+};
+
 const origDisp = viewer.disp.bind(viewer);
 viewer.disp = function(prompt, value) {
   origDisp(prompt, value);
