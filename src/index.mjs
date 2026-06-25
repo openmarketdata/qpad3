@@ -46,18 +46,33 @@ tabBar.addEventListener('click', (e) => {
 // Drive the active tab from the server's response, not the typed command:
 //  - a grid frame (grid.update) shows the Grid tab
 //  - a REPL result (viewer.disp '=>') shows the REPL tab
-// A `.ws.grid` call emits both a grid frame and a trailing `=> ::` echo; the
-// `::` echo carries no result, so it must not pull focus back to the REPL.
+// A `.ws.grid` call emits a grid frame followed by a trailing `=> ::` echo; that
+// echo must not pull focus back to the REPL. But a genuine command that just
+// returns `::` (with no grid frame) should still switch to the REPL. So only the
+// `::` echo immediately following a grid frame is suppressed.
+let gridFrameForThisResult = false;
+
 const origUpdate = grid.update.bind(grid);
 grid.update = async function(data) {
+  gridFrameForThisResult = true;
   await origUpdate(data);
+  switchTab('grid');
+};
+
+const origAppend = grid.append.bind(grid);
+grid.append = async function(data) {
+  gridFrameForThisResult = true;
+  await origAppend(data);
   switchTab('grid');
 };
 
 const origDisp = viewer.disp.bind(viewer);
 viewer.disp = function(prompt, value) {
   origDisp(prompt, value);
-  if (prompt === '=>' && value !== '::' && value !== '::\n') switchTab('repl');
+  if (prompt !== '=>') return;
+  const isNull = value === '::' || value === '::\n';
+  if (!(isNull && gridFrameForThisResult)) switchTab('repl');
+  gridFrameForThisResult = false;
 };
 
 // Expose switchTab for programmatic use
