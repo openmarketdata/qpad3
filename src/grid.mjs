@@ -178,9 +178,12 @@ export function createGrid(container) {
   /**
    * Core update logic, always run serialized via the queue.
    *
-   * @param {object} data  Column-oriented q table object with Symbol.for('meta')
+   * @param {object} data    Column-oriented q table object with Symbol.for('meta')
+   * @param {boolean} append When false (default) the grid is reloaded: existing
+   *   rows are replaced by the incoming data. When true the rows are appended to
+   *   the current table.
    */
-  async function applyUpdate(data) {
+  async function applyUpdate(data, append) {
     const meta = data[Symbol.for('meta')];
     const clean = prepareData(data, meta);
     const desiredSchema = meta ? inferSchema(meta) : clean;
@@ -197,6 +200,10 @@ export function createGrid(container) {
       await viewer.load(next);
       if (table) await table.delete();
       table = next;
+    } else if (!append) {
+      // Reload: drop the existing rows so the incoming data replaces them
+      // rather than being appended to the previous result.
+      await table.clear();
     }
 
     await table.update(clean);
@@ -204,17 +211,27 @@ export function createGrid(container) {
 
   return {
     /**
-     * Load or update the grid with a deserialized q table.
-     * Accepts the column-oriented object produced by ipc.mjs, including
-     * Symbol.for('meta') metadata for schema inference.
-     * Creates a new Perspective table on first call, then updates in place.
+     * Load (reload) the grid with a deserialized q table, replacing any
+     * existing rows. Accepts the column-oriented object produced by ipc.mjs,
+     * including Symbol.for('meta') metadata for schema inference.
      *
      * @param {object} data  Column-oriented q table object with Symbol.for('meta')
      */
     update(data) {
       // Serialize updates so concurrent calls can't race on (re)creating
       // the table.
-      queue = queue.then(() => applyUpdate(data));
+      queue = queue.then(() => applyUpdate(data, false));
+      return queue;
+    },
+
+    /**
+     * Append rows to the current grid without clearing existing data. The
+     * server (`.ws.grida`) guarantees the schema matches before sending.
+     *
+     * @param {object} data  Column-oriented q table object with Symbol.for('meta')
+     */
+    append(data) {
+      queue = queue.then(() => applyUpdate(data, true));
       return queue;
     },
 
