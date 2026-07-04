@@ -162,6 +162,11 @@ export function createGrid(container) {
    * loaded in the viewer (different column names, count, or types). q sends
    * meta on every table result, so type changes are detected too.
    *
+   * The comparison is order-insensitive: Perspective's `table.schema()` does
+   * not preserve the q column order, so comparing by position gives false
+   * positives that would recreate the table on every append (dropping the
+   * existing rows). Compare column names as a set and types by name instead.
+   *
    * @param {object} current   Current Perspective schema { col: type }
    * @param {object} desired   Desired Perspective schema { col: type }
    * @param {boolean} hasMeta  Whether q meta (and thus types) is available
@@ -170,8 +175,8 @@ export function createGrid(container) {
     const curKeys = Object.keys(current);
     const newKeys = Object.keys(desired);
     if (curKeys.length !== newKeys.length) return true;
-    return newKeys.some((k, i) =>
-      k !== curKeys[i] || (hasMeta && current[k] !== desired[k])
+    return newKeys.some(k =>
+      !(k in current) || (hasMeta && current[k] !== desired[k])
     );
   }
 
