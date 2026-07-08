@@ -61,9 +61,10 @@ const darkTheme = EditorView.theme({
  *
  * @param {HTMLElement} parent  DOM element to mount into
  * @param {function(string):void} onExecute  Called with the code string when user presses Ctrl+Enter
+ * @param {function():void} [onChange]  Called whenever the document content changes
  * @returns {{ view: EditorView, getValue: () => string, setValue: (s: string) => void }}
  */
-export function createEditor(parent, onExecute) {
+export function createEditor(parent, onExecute, onChange) {
   const executeKeymap = keymap.of([
     {
       // Ctrl+Enter / Cmd+Enter: send current line or selection
@@ -118,6 +119,9 @@ export function createEditor(parent, onExecute) {
       qHighlightStyle,
       darkTheme,
       EditorView.lineWrapping,
+      EditorView.updateListener.of((u) => {
+        if (u.docChanged && onChange) onChange();
+      }),
     ],
   });
 
