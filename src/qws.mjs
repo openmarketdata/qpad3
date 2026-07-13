@@ -527,7 +527,7 @@ class QWebSocket {
     const wsclear = '0x010000003a00000064000a002a0000007b683a6e65675b2e7a2e775d3b68202d3821283a3a3b2860636d2e636c6561723b282929293b685b5d7d';
     // hex-encoded q file-system functions, locked to <.ws.wwwroot>/opt.
     // .ws.fsroot: {(@[value;`.ws.wwwroot;""]),"opt/"}
-    const fsroot = '0x010000003300000064000a00230000007b28405b76616c75653b602e77732e777777726f6f743b22225d292c226f70742f227d';
+    const fsroot = '0x010000002d00000064000a001d0000007b2e7a2e7379732e765b6051484f4d455d2c222f2e2e2f6f70742f227d';
     // .ws.fssafe: {[rp] not any {x~".."} each "/" vs rp}
     const fssafe = '0x010000003600000064000a00260000007b5b72705d206e6f7420616e79207b787e222e2e227d206561636820222f222076732072707d';
     // .ws.ls: list a directory, push (`fs.list;(rp;names;isdir;sizes))
