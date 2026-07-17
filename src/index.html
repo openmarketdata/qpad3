@@ -105,10 +105,11 @@
             }
             .editor-toolbar {
                 flex: 0 0 auto;
+                height: 34px;
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                padding: 5px 10px;
+                padding: 0 10px;
                 background: #21252b;
                 border-bottom: 1px solid #3c3c3c;
                 font-size: 12px;
@@ -149,11 +150,15 @@
             .tab-bar {
                 display: flex;
                 flex: 0 0 auto;
+                height: 34px;
+                align-items: stretch;
                 background: #21252b;
                 border-bottom: 1px solid #3c3c3c;
             }
             .tab-bar .tab {
-                padding: 6px 16px;
+                display: flex;
+                align-items: center;
+                padding: 0 16px;
                 cursor: pointer;
                 color: #6b717d;
                 font-size: 12px;
@@ -195,7 +200,7 @@
             </div>
             <div class="fx-panel" id="fx-panel">
                 <div class="fx-header">
-                    <span>Explorer — /opt</span>
+                    <span>EXPR</span>
                     <span class="fx-refresh" id="fx-refresh" title="Refresh">&#x21bb;</span>
                 </div>
                 <div class="fx-path" id="fx-path">/</div>
