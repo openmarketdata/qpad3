@@ -107,7 +107,7 @@
             .fx-item .fx-icon { width: 14px; text-align: center; flex: 0 0 auto; }
             .fx-item .fx-size { margin-left: auto; color: #4b515d; font-size: 11px; }
             .one {
-                flex: 1 1 auto;
+                flex: 2 1 0;
                 min-width: 360px;
                 display: flex;
                 flex-direction: column;
@@ -192,20 +192,18 @@
             #editor-container .cm-editor {
                 height: 100%;
             }
-            /* Fix the editor width to 81 monospace characters (wraps at 81 cols).
-               --cm81 is set from the font's exact character width in index.mjs so
-               wrapping lands on column 81; fit-content tightens the editor to that
-               width so the active-line highlight ends at column 81 (no wide margin). */
-            #editor-container.fixed-81 .cm-content {
+            /* Fix the editor to 81 monospace columns: cap the whole editor box
+               (gutter + 81 cols + scrollbar) so text wraps at column 81, the
+               vertical scrollbar stays at the editor's right edge (not floating at
+               the longest line), and the width is independent of content/filename.
+               --cm81 is computed from the font metrics in index.mjs; when the pane
+               is narrower than 81 cols the cap simply doesn't bind. */
+            #editor-container.fixed-81 {
                 max-width: var(--cm81, 81ch);
             }
-            #editor-container.fixed-81 .cm-scroller,
-            #editor-container.fixed-81 .cm-editor {
-                width: fit-content;
-                max-width: 100%;
-            }
             .two {
-                flex: 1 1 560px;
+                flex: 3 1 0;
+                min-width: 360px;
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
