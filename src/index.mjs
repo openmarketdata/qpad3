@@ -151,14 +151,10 @@ btnFiles.addEventListener('click', () => {
 
 // Editor toolbar: New / Save
 etNew.addEventListener('click', () => {
-  const name = prompt('New file name (created in /opt/' + (fx.getCwd() || '') + '):');
-  if (!name) return;
-  const rel = (fx.getCwd() ? fx.getCwd().replace(/\/+$/, '') + '/' : '') + name;
   loadingFile = true;
   editor.setValue('');
   loadingFile = false;
-  setCurrentFile(rel);
-  fx.save(rel, '');
+  setCurrentFile(null);
 });
 
 etSave.addEventListener('click', () => {
