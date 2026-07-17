@@ -192,9 +192,17 @@
             #editor-container .cm-editor {
                 height: 100%;
             }
-            /* Fix the editor width to 81 monospace characters (wraps at 81 cols) */
+            /* Fix the editor width to 81 monospace characters (wraps at 81 cols).
+               --cm81 is set from the font's exact character width in index.mjs so
+               wrapping lands on column 81; fit-content tightens the editor to that
+               width so the active-line highlight ends at column 81 (no wide margin). */
             #editor-container.fixed-81 .cm-content {
-                max-width: 81ch;
+                max-width: var(--cm81, 81ch);
+            }
+            #editor-container.fixed-81 .cm-scroller,
+            #editor-container.fixed-81 .cm-editor {
+                width: fit-content;
+                max-width: 100%;
             }
             .two {
                 flex: 1 1 560px;

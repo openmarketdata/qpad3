@@ -186,6 +186,14 @@ document.addEventListener('click', () => etMenu.classList.remove('open'));
 
 etFixWidth.addEventListener('click', () => {
   const on = editorContainer.classList.toggle('fixed-81');
+  if (on) {
+    // Exact width for 81 columns from the font metrics, plus CodeMirror's
+    // 8px .cm-line padding (6 left + 2 right) and a 1px epsilon, so column
+    // 81 fits and column 82 wraps.
+    const cw = editor.view.defaultCharacterWidth || 7.8;
+    const px = Math.ceil(81 * cw) + 9;
+    editorContainer.style.setProperty('--cm81', px + 'px');
+  }
   etFixWidth.classList.toggle('checked', on);
   etMenu.classList.remove('open');
 });
