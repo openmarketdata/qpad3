@@ -504,7 +504,7 @@ class QWebSocket {
     websocket.binaryType = 'arraybuffer';
     // Register callable functions at init time
     this.register('viewer',(...args) => this.viewer.disp(...args));
-    //this.register('clear',      ()        => this.viewer.clear());
+    this.register('cm.clear', () => this.viewer.clear());
     //this.register('cm.setOpacity', (n)       => this.viewer.setOpacity(n));
     this.register('grid', (...args)    => this.grid.update(...args));
     this.register('grida', (...args)   => this.grid.append(...args));
