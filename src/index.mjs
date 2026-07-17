@@ -2,6 +2,7 @@ import QWebSocket from './qws.mjs';
 import { createEditor } from './editor.mjs';
 import { createViewer } from './viewer.mjs';
 import { createGrid } from './grid.mjs';
+import { createFileExplorer } from './fileexplorer.mjs';
 
 console.log("Connecting to Q");
 const qconn = new QWebSocket();
@@ -14,6 +15,8 @@ const editor = createEditor(editorContainer, (code) => {
   console.log('Executing:', code);
   viewer.appendInput(code);
   qconn.send(qconn.serialize(code));
+}, () => {
+  if (!loadingFile) markDirty();
 });
 window.editor = editor;
 
@@ -77,6 +80,101 @@ viewer.disp = function(prompt, value) {
 
 // Expose switchTab for programmatic use
 window.switchTab = switchTab;
+
+// ---------------------------------------------------------------------------
+// Control-menu sidebar + server-side file explorer
+// ---------------------------------------------------------------------------
+
+// Editor <-> open-file state
+let currentFile = null;   // path relative to opt, or null for an unsaved buffer
+let dirty = false;
+let loadingFile = false;  // suppresses the dirty flag while loading a file
+
+const etFile = document.getElementById('et-file');
+const etSave = document.getElementById('et-save');
+const etNew = document.getElementById('et-new');
+
+function renderFileLabel() {
+  etFile.innerHTML = '';
+  etFile.appendChild(document.createTextNode(currentFile || 'untitled'));
+  if (dirty) {
+    const dot = document.createElement('span');
+    dot.className = 'dirty';
+    dot.textContent = ' \u25CF';
+    etFile.appendChild(dot);
+  }
+  etSave.disabled = !(dirty || currentFile);
+}
+
+function markDirty() {
+  dirty = true;
+  renderFileLabel();
+}
+
+function setCurrentFile(rel) {
+  currentFile = rel;
+  dirty = false;
+  renderFileLabel();
+}
+
+const fxPanel = document.getElementById('fx-panel');
+const fx = createFileExplorer({
+  panel: fxPanel,
+  listEl: document.getElementById('fx-list'),
+  pathEl: document.getElementById('fx-path'),
+  refreshEl: document.getElementById('fx-refresh'),
+  send: (qcode) => qconn.fsCmd(qcode),
+  onOpenFile: (rel, content) => {
+    loadingFile = true;
+    editor.setValue(content);
+    loadingFile = false;
+    setCurrentFile(rel);
+  },
+});
+
+// Route fs.* frames to the explorer; set the grid-frame flag first so the
+// trailing `=> ::` echo from each `.ws.*` call doesn't switch the REPL/GRID tab.
+qconn.setFs({
+  list:  (...a) => { gridFrameForThisResult = true; return fx.list(...a); },
+  open:  (...a) => { gridFrameForThisResult = true; return fx.open(...a); },
+  saved: (...a) => { gridFrameForThisResult = true; return fx.saved(...a); },
+  error: (...a) => { gridFrameForThisResult = true; return fx.error(...a); },
+});
+
+// Sidebar button toggles the file-explorer panel.
+const btnFiles = document.getElementById('btn-files');
+btnFiles.addEventListener('click', () => {
+  const open = fxPanel.classList.toggle('open');
+  btnFiles.classList.toggle('active', open);
+  if (open) fx.activate();
+});
+
+// Editor toolbar: New / Save
+etNew.addEventListener('click', () => {
+  const name = prompt('New file name (created in /opt/' + (fx.getCwd() || '') + '):');
+  if (!name) return;
+  const rel = (fx.getCwd() ? fx.getCwd().replace(/\/+$/, '') + '/' : '') + name;
+  loadingFile = true;
+  editor.setValue('');
+  loadingFile = false;
+  setCurrentFile(rel);
+  fx.save(rel, '');
+});
+
+etSave.addEventListener('click', () => {
+  let rel = currentFile;
+  if (!rel) {
+    const name = prompt('Save as (in /opt/' + (fx.getCwd() || '') + '):');
+    if (!name) return;
+    rel = (fx.getCwd() ? fx.getCwd().replace(/\/+$/, '') + '/' : '') + name;
+    setCurrentFile(rel);
+  }
+  fx.save(rel, editor.getValue());
+  dirty = false;
+  renderFileLabel();
+});
+
+renderFileLabel();
 
 // Define ui.update_wdr handler for q server grid data push
 // q sends (::;(`ui.update_wdr;data)) which invokes window.eval("ui.update_wdr")(data)
