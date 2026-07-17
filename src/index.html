@@ -18,11 +18,22 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                padding-top: 6px;
                 gap: 4px;
                 background: #21252b;
                 border-right: 1px solid #3c3c3c;
             }
+            .sidebar .side-logo {
+                width: 100%;
+                height: 34px;
+                flex: 0 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #e5c07b;
+                border-bottom: 1px solid #3c3c3c;
+                margin-bottom: 6px;
+            }
+            .sidebar .side-logo svg { width: 24px; height: 24px; }
             .sidebar .side-btn {
                 width: 34px;
                 height: 34px;
@@ -194,6 +205,9 @@
     <body>
         <div class="wrapper">
             <div class="sidebar">
+                <div class="side-logo" title="qpad3">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="13.5" y1="13.5" x2="18.5" y2="18.5"></line></svg>
+                </div>
                 <div class="side-btn" id="btn-files" title="File explorer">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                 </div>
