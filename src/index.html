@@ -134,12 +134,56 @@
             }
             .editor-toolbar button:hover:not(:disabled) { background: #3a414d; color: #fff; }
             .editor-toolbar button:disabled { opacity: 0.4; cursor: default; }
+            /* Three-dot overflow menu */
+            .et-menu { position: relative; display: flex; }
+            .et-menu .et-more {
+                padding: 3px 8px;
+                font-size: 16px;
+                line-height: 1;
+            }
+            .et-menu-dropdown {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                margin-top: 4px;
+                min-width: 210px;
+                background: #21252b;
+                border: 1px solid #3c3c3c;
+                border-radius: 4px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                padding: 4px 0;
+                z-index: 20;
+            }
+            .et-menu-dropdown.open { display: block; }
+            .et-menu-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 12px;
+                font-size: 12px;
+                color: #abb2bf;
+                cursor: pointer;
+                white-space: nowrap;
+            }
+            .et-menu-item:hover { background: #2c313a; }
+            .et-menu-item .et-check {
+                width: 14px;
+                flex: 0 0 auto;
+                color: #e5c07b;
+                visibility: hidden;
+            }
+            .et-menu-item.checked .et-check { visibility: visible; }
             #editor-container {
                 flex: 1 1 auto;
                 overflow: hidden;
             }
             #editor-container .cm-editor {
                 height: 100%;
+            }
+            /* Fix the editor width to 81 monospace characters (wraps at 81 cols) */
+            #editor-container.fixed-81 .cm-content {
+                max-width: 81ch;
             }
             .two {
                 flex: 1 1 560px;
@@ -211,6 +255,15 @@
                     <span class="et-file" id="et-file">untitled</span>
                     <button id="et-new" title="New file">New</button>
                     <button id="et-save" title="Save file" disabled>Save</button>
+                    <div class="et-menu">
+                        <button id="et-more" class="et-more" title="More">&#8942;</button>
+                        <div class="et-menu-dropdown" id="et-menu-dropdown">
+                            <div class="et-menu-item" id="et-fixwidth" role="menuitemcheckbox">
+                                <span class="et-check" id="et-fixwidth-check">&#10003;</span>
+                                <span>Fix width to 81 characters</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="editor-container"></div>
             </div>

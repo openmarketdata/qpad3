@@ -176,6 +176,24 @@ etSave.addEventListener('click', () => {
 
 renderFileLabel();
 
+// Editor toolbar overflow (⋮) menu
+const etMore = document.getElementById('et-more');
+const etMenu = document.getElementById('et-menu-dropdown');
+const etFixWidth = document.getElementById('et-fixwidth');
+
+etMore.addEventListener('click', (e) => {
+  e.stopPropagation();
+  etMenu.classList.toggle('open');
+});
+// close the menu on any outside click
+document.addEventListener('click', () => etMenu.classList.remove('open'));
+
+etFixWidth.addEventListener('click', () => {
+  const on = editorContainer.classList.toggle('fixed-81');
+  etFixWidth.classList.toggle('checked', on);
+  etMenu.classList.remove('open');
+});
+
 // Define ui.update_wdr handler for q server grid data push
 // q sends (::;(`ui.update_wdr;data)) which invokes window.eval("ui.update_wdr")(data)
 // window.ui = window.ui || {};
