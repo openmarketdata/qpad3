@@ -192,15 +192,18 @@
             #editor-container .cm-editor {
                 height: 100%;
             }
-            /* Fix the editor to 81 monospace columns: cap the whole editor box
-               (gutter + 81 cols + scrollbar) so text wraps at column 81, the
-               vertical scrollbar stays at the editor's right edge (not floating at
-               the longest line), and the width is independent of content/filename.
-               --cm81 is computed from the font metrics in index.mjs; when the pane
-               is narrower than 81 cols the cap simply doesn't bind. */
-            #editor-container.fixed-81 {
-                max-width: var(--cm81, 81ch);
+            /* Theme the CodeMirror scrollbars (editor + REPL) to match the dark UI. */
+            .cm-scroller { scrollbar-width: thin; scrollbar-color: #3e4451 transparent; }
+            .cm-scroller::-webkit-scrollbar { width: 12px; height: 12px; }
+            .cm-scroller::-webkit-scrollbar-track { background: transparent; }
+            .cm-scroller::-webkit-scrollbar-thumb {
+                background-color: #3e4451;
+                border-radius: 6px;
+                border: 3px solid transparent;
+                background-clip: padding-box;
             }
+            .cm-scroller::-webkit-scrollbar-thumb:hover { background-color: #4b515d; }
+            .cm-scroller::-webkit-scrollbar-corner { background: transparent; }
             .two {
                 flex: 3 1 0;
                 min-width: 360px;
@@ -277,12 +280,7 @@
                     <button id="et-save" title="Save file" disabled>Save</button>
                     <div class="et-menu">
                         <button id="et-more" class="et-more" title="More">&#8943;</button>
-                        <div class="et-menu-dropdown" id="et-menu-dropdown">
-                            <div class="et-menu-item" id="et-fixwidth" role="menuitemcheckbox">
-                                <span class="et-check" id="et-fixwidth-check">&#10003;</span>
-                                <span>Fix width to 81 characters</span>
-                            </div>
-                        </div>
+                        <div class="et-menu-dropdown" id="et-menu-dropdown"></div>
                     </div>
                 </div>
                 <div id="editor-container"></div>

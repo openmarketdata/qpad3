@@ -17,24 +17,8 @@ const editor = createEditor(editorContainer, (code) => {
   qconn.send(qconn.serialize(code));
 }, () => {
   if (!loadingFile) markDirty();
-  refreshFixWidth();
 });
 window.editor = editor;
-
-// Width (px) of the fixed 81-column editor box: 81 chars at the font's exact
-// character width + the .cm-line padding (6+2) + the current gutter and vertical
-// scrollbar widths, +1px so column 81 fits and column 82 wraps. Recomputed on
-// toggle and on doc change so a growing line-number gutter stays accurate.
-function refreshFixWidth() {
-  if (!editorContainer.classList.contains('fixed-81')) return;
-  const cw = editor.view.defaultCharacterWidth || 7.8;
-  const scroller = editorContainer.querySelector('.cm-scroller');
-  const gutters = editorContainer.querySelector('.cm-gutters');
-  const gutterW = gutters ? gutters.getBoundingClientRect().width : 0;
-  const scrollbarW = scroller ? scroller.offsetWidth - scroller.clientWidth : 0;
-  const px = Math.ceil(81 * cw) + gutterW + scrollbarW + 8 + 1;
-  editorContainer.style.setProperty('--cm81', px + 'px');
-}
 
 // Mount the readonly Q viewer/REPL output in the right pane
 const viewerContainer = document.getElementById('viewer-container');
@@ -188,10 +172,9 @@ etSave.addEventListener('click', () => {
 
 renderFileLabel();
 
-// Editor toolbar overflow (⋮) menu
+// Editor toolbar overflow (⋯) menu
 const etMore = document.getElementById('et-more');
 const etMenu = document.getElementById('et-menu-dropdown');
-const etFixWidth = document.getElementById('et-fixwidth');
 
 etMore.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -199,13 +182,6 @@ etMore.addEventListener('click', (e) => {
 });
 // close the menu on any outside click
 document.addEventListener('click', () => etMenu.classList.remove('open'));
-
-etFixWidth.addEventListener('click', () => {
-  const on = editorContainer.classList.toggle('fixed-81');
-  if (on) refreshFixWidth();
-  etFixWidth.classList.toggle('checked', on);
-  etMenu.classList.remove('open');
-});
 
 // Define ui.update_wdr handler for q server grid data push
 // q sends (::;(`ui.update_wdr;data)) which invokes window.eval("ui.update_wdr")(data)
