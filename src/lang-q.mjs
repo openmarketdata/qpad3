@@ -91,7 +91,7 @@ function tokenBase(stream, state) {
         || stream.match(/^\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?/)
         || stream.match(/^\d+[ptuv]{1}/)) {
       t = "number"; // temporal
-    } else if (stream.match(/^0[NwW]{1}/)
+    } else if (stream.match(/^0[NwW][hijefgpmdznuvt]?/)
         || stream.match(/^0x[\da-fA-F]*/)
         || stream.match(/^[01]+[b]{1}/)
         || stream.match(/^\d+[chijn]{1}/)
