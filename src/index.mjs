@@ -2,6 +2,7 @@ import QWebSocket from './qws.mjs';
 import { createEditor } from './editor.mjs';
 import { createViewer } from './viewer.mjs';
 import { createGrid } from './grid.mjs';
+import { createPlot } from './plot.mjs';
 import { createFileExplorer } from './fileexplorer.mjs';
 
 console.log("Connecting to Q");
@@ -31,6 +32,16 @@ const gridContainer = document.getElementById('grid-container');
 const grid = createGrid(gridContainer);
 qconn.setGrid(grid); // expose as global 'grid' for q server eval calls (grid.update, etc.)
 
+// Mount the SciChart plot panel in the right pane (Plot tab)
+const plotContainer = document.getElementById('plot-container');
+const plotPanel = createPlot(plotContainer);
+// Global wrapper: plot(chartType, data, config). Not wired to a .ws function
+// yet — driven from the browser console for now.
+window.plot = (chartType, data, config) => {
+  switchTab('plot');
+  return plotPanel.plot(chartType, data, config);
+};
+
 // Tab switching logic
 const tabBar = document.querySelector('.tab-bar');
 const tabs = tabBar.querySelectorAll('.tab');
@@ -39,6 +50,7 @@ function switchTab(tabName) {
   tabs.forEach(t => t.classList.toggle('tab-active', t.dataset.tab === tabName));
   viewerContainer.style.display = tabName === 'repl' ? 'flex' : 'none';
   gridContainer.style.display = tabName === 'grid' ? 'flex' : 'none';
+  plotContainer.style.display = tabName === 'plot' ? 'flex' : 'none';
 }
 
 tabBar.addEventListener('click', (e) => {

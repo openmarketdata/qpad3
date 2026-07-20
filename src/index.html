@@ -254,6 +254,12 @@
                 width: 100%;
                 height: 100%;
             }
+            #plot-container {
+                flex: 1 1 auto;
+                overflow: hidden;
+                display: none;
+                background: #1e2127;
+            }
         </style>
     </head>
     <body>
@@ -290,9 +296,11 @@
                 <div class="tab-bar">
                     <div class="tab tab-active" data-tab="repl">REPL</div>
                     <div class="tab" data-tab="grid">GRID</div>
+                    <div class="tab" data-tab="plot">PLOT</div>
                 </div>
                 <div id="viewer-container"></div>
                 <div id="grid-container"></div>
+                <div id="plot-container"></div>
             </div>
         </div>
     </body>
