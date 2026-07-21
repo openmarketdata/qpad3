@@ -1,10 +1,32 @@
 import path from 'path'; // cjs: const path = require('path');
+import fs from 'fs';
 import { createRequire } from 'module';
 import HtmlWebPackPlugin from 'html-webpack-plugin'; // Plugin to generate HTML
 
 const require = createRequire(import.meta.url);
 const PerspectivePlugin = require('@finos/perspective-webpack-plugin');
-const CopyPlugin = require('copy-webpack-plugin');
+
+// Copy SciChart's 2D WebAssembly runtime next to the bundle so it is served
+// from the app's own origin (SciChartSurface.useWasmLocal()). Implemented
+// inline with Node's fs to avoid an extra build dependency (copy-webpack-plugin
+// v14 needs Node >= 20.9, breaking builds on older Node).
+const SCICHART_WASM_FILES = [
+  'node_modules/scichart/_wasm/scichart2d.wasm',
+  'node_modules/scichart/_wasm/scichart2d-nosimd.wasm',
+  'node_modules/scichart/_wasm/scichart2d.js',
+];
+
+class CopySciChartWasmPlugin {
+  apply(compiler) {
+    compiler.hooks.afterEmit.tap('CopySciChartWasmPlugin', () => {
+      const out = compiler.options.output.path;
+      fs.mkdirSync(out, { recursive: true });
+      for (const f of SCICHART_WASM_FILES) {
+        fs.copyFileSync(path.resolve(f), path.join(out, path.basename(f)));
+      }
+    });
+  }
+}
 
 export default {
   mode: 'production',
@@ -23,15 +45,7 @@ export default {
       template: './src/index.html'
     }),
     new PerspectivePlugin(),
-    // Copy SciChart's 2D WebAssembly runtime next to the bundle so it is
-    // served from the app's own origin (SciChartSurface.useWasmLocal()).
-    new CopyPlugin({
-      patterns: [
-        { from: 'node_modules/scichart/_wasm/scichart2d.wasm', to: '' },
-        { from: 'node_modules/scichart/_wasm/scichart2d-nosimd.wasm', to: '' },
-        { from: 'node_modules/scichart/_wasm/scichart2d.js', to: '' },
-      ],
-    }),
+    new CopySciChartWasmPlugin(),
   ],
   module: {
     rules: [
