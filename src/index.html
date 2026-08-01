@@ -260,6 +260,32 @@
                 display: none;
                 background: #1e2127;
             }
+            .plot-overlay {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                font-family: monospace;
+                font-size: 11px;
+                color: #abb2bf;
+            }
+            .plot-label {
+                position: absolute;
+                white-space: nowrap;
+            }
+            .plot-label.title {
+                top: 6px; left: 50%; transform: translateX(-50%);
+                font-size: 13px; color: #e5e5e5;
+            }
+            .plot-label.xlabel {
+                bottom: 4px; left: 50%; transform: translateX(-50%);
+            }
+            .plot-label.ylabel {
+                top: 50%; left: 4px; transform: translate(-50%, -50%) rotate(-90deg);
+            }
+            .plot-label.v-xmin { bottom: 18px; left: 8px; }
+            .plot-label.v-xmax { bottom: 18px; right: 8px; }
+            .plot-label.v-ymin { bottom: 32px; left: 20px; }
+            .plot-label.v-ymax { top: 24px; left: 20px; }
         </style>
     </head>
     <body>
