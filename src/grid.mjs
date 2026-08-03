@@ -34,7 +34,7 @@ export function createGrid(container) {
   // "X/Y Line" chart) with whatever columns the table happens to expose when
   // the plugin is selected. Blank those slots on a plugin switch so a chart
   // starts with no axis selected and the user picks them explicitly. Plugins
-  // without named slots (the datagrid) show every column, so switching back to
+  // without axis slots (the datagrid) show every column, so switching back to
   // one has to re-activate all of them — Perspective carries the blanked
   // `columns` config across the switch, which would otherwise leave the grid
   // with no active columns at all.
@@ -47,8 +47,12 @@ export function createGrid(container) {
     lastPlugin = config.plugin;
     if (!switched) return;
     const plugin = await viewer.getPlugin(config.plugin);
-    const named = plugin && plugin.config_column_names;
-    if (named) {
+    // `min_config_columns` is a number for plugins with a fixed set of axis
+    // slots (every d3fc chart) and undefined for the datagrid, which shows an
+    // unbounded column list. `config_column_names` is not a discriminator —
+    // the datagrid reports a generic ["Columns"] slot.
+    const slotted = plugin && plugin.min_config_columns != null;
+    if (slotted) {
       if (config.columns.some(c => c != null)) {
         await viewer.restore({ columns: config.columns.map(() => null) });
       }
