@@ -30,6 +30,32 @@ export function createGrid(container) {
   let table = null;
   let queue = Promise.resolve();  // serializes concurrent update() calls
 
+  // Perspective fills a plugin's named column slots (e.g. the X/Y axes of the
+  // "X/Y Line" chart) with whatever columns the table happens to expose when
+  // the plugin is selected. Blank those slots on a plugin switch so a chart
+  // starts with no axis selected and the user picks them explicitly. Plugins
+  // without named slots (the datagrid) keep showing every column.
+  let lastPlugin = null;
+  let configQueue = Promise.resolve();
+
+  async function clearAutoSelectedColumns() {
+    const config = await viewer.save();
+    const switched = lastPlugin !== null && config.plugin !== lastPlugin;
+    lastPlugin = config.plugin;
+    if (!switched) return;
+    const plugin = await viewer.getPlugin(config.plugin);
+    if (!plugin || !plugin.config_column_names) return;
+    if (!config.columns.some(c => c != null)) return;
+    await viewer.restore({ columns: config.columns.map(() => null) });
+  }
+
+  viewer.addEventListener('perspective-config-update', () => {
+    configQueue = configQueue.then(clearAutoSelectedColumns).catch(() => {});
+  });
+
+  // Record the plugin the viewer starts on, so the first switch is detected.
+  configQueue = viewer.save().then(c => { lastPlugin = c.plugin; }).catch(() => {});
+
   /**
    * Lazily initialize the Perspective worker
    */
