@@ -95,6 +95,52 @@ QHOME=bin QLIC=bin ./bin/l64/q test/serve.q -p 5000   # live q server + static s
   `([] sym:enlist`z; v:enlist 30)` for a single row. If you see `'rank`, fix the query,
   don't conclude the feature is broken.
 
+## If `test/serve.q` is missing from the checkout
+Some branches don't carry the test scaffolding. Recreate `test/serve.q` (any q file works) so the
+**same origin** serves `dist/` statically *and* evaluates `?<q expr>` HTTP queries — the client
+bootstraps `.z.ws` with `fetch('/?(-8!.z.ws)~0x...')` and derives the WS URL from
+`window.location`, so a separate static server will not work. Requirements:
+- `.z.ph:{...}` → for `""`/`"/"` serve `dist/index.html`; for other paths serve `dist/<path>`
+  with a correct `Content-Type` (`application/javascript`, `application/wasm`, `text/css`);
+  a path starting with `?` must be `value`-d and returned as `"<pre>",(-3!result),"</pre>"`.
+- On an eval error return **HTTP 400** — the client relies on the 400 to fall into its
+  `.z.ws:-9!...` bootstrap path; returning 200 with the error text triggers the
+  "`.z.ws` is already set by others" confirm dialog instead.
+- `chmod +x bin/l64/q` may be needed.
+- q exits immediately when started with stdin closed (`nohup ... < /dev/null`). Start it as
+  `setsid bash -c 'QHOME=bin QLIC=bin exec ./bin/l64/q test/serve.q -p 5000 < <(tail -f /dev/null) > /tmp/qserve.log 2>&1' &`.
+
+## Perspective viewer / plugin-switch testing (GRID tab)
+- Hover the viewer → **configure** button at the far top-right (~988,91 at 1024x768) opens the
+  settings panel. The plugin name button next to it (~957,91) opens the plugin list:
+  Datagrid (y≈124), Treemap, Sunburst, Heatmap, X Bar, X/Y Line (y≈247), X/Y Scatter, Y Bar (y≈309),
+  Y Area, Y Scatter, OHLC, Candlestick — offsets shift by one row depending on the current plugin,
+  so screenshot the open list before clicking.
+- Assigning a column to a named slot (X Axis / Y Axis / Columns) requires a **real drag** from the
+  "All Columns" list row handle (x≈912) onto the slot box; clicking the round button at the right
+  of a row only focuses it.
+- The status line (`10 x 2 (4)`) is the fastest oracle: `rows x activeColumns (availableColumns)`.
+  `10 x 0 (4)` = nothing selected; `10 x 4` = all columns active.
+- Known caveat (as of PR #29/#30): after Datagrid → chart → Datagrid the datagrid can come back with
+  **0 active columns** (blank). A same-schema `.ws.grid` reload does not recover it; only a query
+  with a different schema (which recreates the Perspective table) or manually dragging columns back
+  does. Check this whenever touching `perspective-config-update` / `viewer.restore` logic.
+- **`config_column_names` does NOT distinguish datagrid from charts.** Measured live in this app
+  (perspective 3.8): `Datagrid → ["Columns"]`, `Y Line → ["Y Axis"]`,
+  `X/Y Line → ["X Axis","Y Axis","Tooltip"]`. So `if (!plugin.config_column_names) …` /
+  `config_column_names.length === 1` are both wrong tests for "the datagrid"; `config_columns` and
+  `constructor.config_columns` are `undefined` for all plugins, and `select_mode` is `toggle` for
+  Datagrid *and* X/Y Line (`select` for Y Line). Use the plugin `name` / element tag
+  (`Datagrid` / `PERSPECTIVE-VIEWER-DATAGRID`) if you need that distinction.
+- The working discriminator is `plugin.min_config_columns` — a number for every d3fc chart, `undefined`
+  for the datagrid. Verified end-to-end (PR #30, commit `7f12d23`): with it, Datagrid → chart → Datagrid
+  restores all columns and rows.
+- Dragging a column onto an axis slot that is *already occupied* does not replace the existing chip;
+  drop into empty slots (or clear the slot first) when scripting axis assignments.
+- Quick runtime introspection for diagnosis (read-only, don't drive the UI this way):
+  `const v=document.querySelector('perspective-viewer'); await v.save(); await v.getPlugin('Datagrid')`.
+  `save().columns` is the authoritative slot state — `[null,null,null]` means every slot blank.
+
 ## Evidence gathering
 - Use `browser_console` to confirm a clean console (expect only `Connecting to Q`,
   `Connected, initializing`, `Deserializing type: N`, `Executing: ...` logs).
