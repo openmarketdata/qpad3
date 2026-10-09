@@ -161,6 +161,14 @@ btnFiles.addEventListener('click', () => {
   if (open) fx.activate();
 });
 
+// Sidebar button shows/hides the editor panel.
+const editorPanel = document.getElementById('editor-panel');
+const btnEditor = document.getElementById('btn-editor');
+btnEditor.addEventListener('click', () => {
+  const hidden = editorPanel.classList.toggle('hidden');
+  btnEditor.classList.toggle('active', !hidden);
+});
+
 // Editor toolbar: New / Save
 etNew.addEventListener('click', () => {
   loadingFile = true;
