@@ -178,9 +178,13 @@ function fitEditorWidth() {
   const view = editor.view;
   const gutters = view.dom.querySelector('.cm-gutters');
   const gutterW = gutters ? gutters.getBoundingClientRect().width : 0;
-  const cs = getComputedStyle(view.contentDOM);
-  const pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
-  const w = Math.ceil(gutterW + pad + EDITOR_SCROLLBAR_PX + EDITOR_COLS * view.defaultCharacterWidth);
+  const hpad = (el) => {
+    const cs = getComputedStyle(el);
+    return parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  };
+  const line = view.contentDOM.querySelector('.cm-line');
+  const pad = hpad(view.contentDOM) + (line ? hpad(line) : 0);
+  const w = Math.ceil(gutterW + pad + EDITOR_SCROLLBAR_PX + EDITOR_COLS * view.defaultCharacterWidth) + 1;
   editorPanel.style.setProperty('--editor-width', w + 'px');
 }
 editor.view.requestMeasure({ read: fitEditorWidth });
