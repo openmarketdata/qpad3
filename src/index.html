@@ -107,13 +107,16 @@
             .fx-item .fx-icon { width: 14px; text-align: center; flex: 0 0 auto; }
             .fx-item .fx-size { margin-left: auto; color: #4b515d; font-size: 11px; }
             .one {
-                flex: 2 1 0;
-                min-width: 360px;
+                flex: 0 0 var(--editor-width, 480px);
+                width: var(--editor-width, 480px);
+                min-width: 0;
                 display: flex;
                 flex-direction: column;
                 border-right: 1px solid #3c3c3c;
                 background: #282c34;
+                overflow: hidden;
             }
+            .one.hidden { display: none; }
             .editor-toolbar {
                 flex: 0 0 auto;
                 height: 34px;
@@ -205,8 +208,8 @@
             .cm-scroller::-webkit-scrollbar-thumb:hover { background-color: #4b515d; }
             .cm-scroller::-webkit-scrollbar-corner { background: transparent; }
             .two {
-                flex: 3 1 0;
-                min-width: 360px;
+                flex: 1 1 0;
+                min-width: 0;
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
@@ -297,6 +300,9 @@
                 <div class="side-btn" id="btn-files" title="File explorer">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                 </div>
+                <div class="side-btn active" id="btn-editor" title="Show/hide editor">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                </div>
             </div>
             <div class="fx-panel" id="fx-panel">
                 <div class="fx-header">
@@ -306,7 +312,7 @@
                 <div class="fx-path" id="fx-path">/</div>
                 <div class="fx-list" id="fx-list"></div>
             </div>
-            <div class="one">
+            <div class="one" id="editor-panel">
                 <div class="editor-toolbar">
                     <span class="et-file" id="et-file">untitled</span>
                     <button id="et-new" title="New file">New</button>
