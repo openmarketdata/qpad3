@@ -169,6 +169,28 @@ btnEditor.addEventListener('click', () => {
   btnEditor.classList.toggle('active', !hidden);
 });
 
+// Size the editor panel to EDITOR_COLS characters of the editor font
+// (gutter + content padding + scrollbar + 80 columns); re-fit when the
+// line-number gutter grows.
+const EDITOR_COLS = 80;
+const EDITOR_SCROLLBAR_PX = 12;
+function fitEditorWidth() {
+  const view = editor.view;
+  const gutters = view.dom.querySelector('.cm-gutters');
+  const gutterW = gutters ? gutters.getBoundingClientRect().width : 0;
+  const hpad = (el) => {
+    const cs = getComputedStyle(el);
+    return parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  };
+  const line = view.contentDOM.querySelector('.cm-line');
+  const pad = hpad(view.contentDOM) + (line ? hpad(line) : 0);
+  const w = Math.ceil(gutterW + pad + EDITOR_SCROLLBAR_PX + EDITOR_COLS * view.defaultCharacterWidth) + 1;
+  editorPanel.style.setProperty('--editor-width', w + 'px');
+}
+editor.view.requestMeasure({ read: fitEditorWidth });
+const editorGutters = editor.view.dom.querySelector('.cm-gutters');
+if (editorGutters) new ResizeObserver(() => fitEditorWidth()).observe(editorGutters);
+
 // Editor toolbar: New / Save
 etNew.addEventListener('click', () => {
   loadingFile = true;
