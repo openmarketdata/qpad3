@@ -240,6 +240,19 @@
                 color: #e5c07b;
                 border-bottom-color: #e5c07b;
             }
+            .tab-bar .tab-menu {
+                margin-left: auto;
+                align-items: center;
+                padding: 0 10px;
+            }
+            .tab-bar .tab-menu button {
+                background: #2c313a;
+                color: #abb2bf;
+                border: 1px solid #3c3c3c;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            .tab-bar .tab-menu button:hover { background: #3a414d; color: #fff; }
             #viewer-container {
                 flex: 1 1 auto;
                 overflow: hidden;
@@ -329,6 +342,14 @@
                     <div class="tab tab-active" data-tab="repl">REPL</div>
                     <div class="tab" data-tab="grid">GRID</div>
                     <div class="tab" data-tab="plot">PLOT</div>
+                    <div class="et-menu tab-menu">
+                        <button id="vw-more" class="et-more" title="More">&#8943;</button>
+                        <div class="et-menu-dropdown" id="vw-menu-dropdown">
+                            <div class="et-menu-item checked" id="vw-highlight">
+                                <span class="et-check">&#10003;</span>Syntax highlighting
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="viewer-container"></div>
                 <div id="grid-container"></div>

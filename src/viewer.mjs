@@ -5,7 +5,7 @@
  * and server responses prefixed with "=>" in the gutter.
  */
 import { EditorView, gutter, GutterMarker } from '@codemirror/view';
-import { EditorState, StateField, StateEffect, RangeSet } from '@codemirror/state';
+import { EditorState, StateField, StateEffect, RangeSet, Compartment } from '@codemirror/state';
 import { qLanguage, qHighlightStyle } from './lang-q.mjs';
 
 /* ── gutter markers ──────────────────────────────────────────────── */
@@ -110,6 +110,8 @@ const viewerTheme = EditorView.theme({
  * @returns {{ view: EditorView, appendInput: (code: string) => void, appendOutput: (text: string) => void, disp: (prompt: string, value: any) => void, setOpacity: (n: number) => void }}
  */
 export function createViewer(parent) {
+  const highlight = new Compartment();
+  const highlightExt = [qLanguage, qHighlightStyle];
   const state = EditorState.create({
     doc: '',
     extensions: [
@@ -117,8 +119,7 @@ export function createViewer(parent) {
       EditorView.editable.of(false),
       promptField,
       promptGutter,
-      qLanguage,
-      qHighlightStyle,
+      highlight.of(highlightExt),
       viewerTheme,
       EditorView.lineWrapping,
     ],
@@ -253,6 +254,14 @@ export function createViewer(parent) {
      */
     setOpacity(opacity) {
       view.dom.style.opacity = opacity;
+    },
+
+    /**
+     * Turn q syntax highlighting of the output on or off
+     * @param {boolean} on
+     */
+    setHighlight(on) {
+      view.dispatch({ effects: highlight.reconfigure(on ? highlightExt : []) });
     },
 
     /**
