@@ -234,7 +234,7 @@ function setReplHighlight(on) {
   vwHighlight.classList.toggle('checked', on);
   try { localStorage.setItem(HL_KEY, on ? '1' : '0'); } catch (e) { /* ignore */ }
 }
-setReplHighlight(localStorage.getItem(HL_KEY) !== '0');
+setReplHighlight(localStorage.getItem(HL_KEY) === '1');
 
 vwMore.addEventListener('click', (e) => {
   e.stopPropagation();
