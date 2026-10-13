@@ -220,10 +220,37 @@ const etMenu = document.getElementById('et-menu-dropdown');
 
 etMore.addEventListener('click', (e) => {
   e.stopPropagation();
+  document.getElementById('vw-menu-dropdown').classList.remove('open');
   etMenu.classList.toggle('open');
 });
-// close the menu on any outside click
-document.addEventListener('click', () => etMenu.classList.remove('open'));
+// Right-pane tab bar overflow (⋯) menu: REPL syntax highlighting toggle
+const vwMore = document.getElementById('vw-more');
+const vwMenu = document.getElementById('vw-menu-dropdown');
+const vwHighlight = document.getElementById('vw-highlight');
+const HL_KEY = 'qpad3.replHighlight';
+
+function setReplHighlight(on) {
+  viewer.setHighlight(on);
+  vwHighlight.classList.toggle('checked', on);
+  try { localStorage.setItem(HL_KEY, on ? '1' : '0'); } catch (e) { /* ignore */ }
+}
+setReplHighlight(localStorage.getItem(HL_KEY) !== '0');
+
+vwMore.addEventListener('click', (e) => {
+  e.stopPropagation();
+  etMenu.classList.remove('open');
+  vwMenu.classList.toggle('open');
+});
+vwHighlight.addEventListener('click', (e) => {
+  e.stopPropagation();
+  setReplHighlight(!vwHighlight.classList.contains('checked'));
+});
+
+// close the menus on any outside click
+document.addEventListener('click', () => {
+  etMenu.classList.remove('open');
+  vwMenu.classList.remove('open');
+});
 
 // Define ui.update_wdr handler for q server grid data push
 // q sends (::;(`ui.update_wdr;data)) which invokes window.eval("ui.update_wdr")(data)
