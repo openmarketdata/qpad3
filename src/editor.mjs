@@ -7,7 +7,7 @@
  */
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, insertNewline } from '@codemirror/commands';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { bracketMatching, foldGutter, indentOnInput } from '@codemirror/language';
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
@@ -112,6 +112,7 @@ export function createEditor(parent, onExecute, onChange) {
       highlightSelectionMatches(),
       executeKeymap,
       keymap.of([
+        { key: 'Enter', run: insertNewline },
         ...closeBracketsKeymap,
         ...defaultKeymap,
         ...searchKeymap,
