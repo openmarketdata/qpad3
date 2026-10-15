@@ -44,10 +44,14 @@ const darkTheme = EditorView.theme({
     color: '#495162',
     border: 'none',
   },
-  // Fixed width for up to 4-digit line numbers so the gutter doesn't widen at 10, 100, 1000
+  // Fixed 4-digit width regardless of line count; 5+ digit numbers are clipped
+  // on the left (rtl overflow) so the low-order digits stay visible
   '.cm-lineNumbers .cm-gutterElement': {
-    padding: '0 8px 0 4px',
-    minWidth: 'calc(4ch + 12px)',
+    padding: '0 4px 0 2px',
+    width: 'calc(4ch + 6px)',
+    minWidth: '0',
+    overflow: 'hidden',
+    direction: 'rtl',
   },
   '.cm-foldGutter .cm-gutterElement': {
     padding: '0 4px',
