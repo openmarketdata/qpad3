@@ -44,8 +44,10 @@ const darkTheme = EditorView.theme({
     color: '#495162',
     border: 'none',
   },
+  // Fixed width for up to 4-digit line numbers so the gutter doesn't widen at 10, 100, 1000
   '.cm-lineNumbers .cm-gutterElement': {
     padding: '0 8px 0 4px',
+    minWidth: 'calc(4ch + 12px)',
   },
   '.cm-foldGutter .cm-gutterElement': {
     padding: '0 4px',
