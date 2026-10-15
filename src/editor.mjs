@@ -5,8 +5,8 @@
  * line numbers, and Ctrl+Enter / Shift+Enter keybindings to send code to
  * the q server via QWebSocket.
  */
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
-import { EditorState } from '@codemirror/state';
+import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, highlightWhitespace } from '@codemirror/view';
+import { EditorState, Compartment } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap, insertNewline } from '@codemirror/commands';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { bracketMatching, foldGutter, indentOnInput } from '@codemirror/language';
@@ -56,6 +56,12 @@ const darkTheme = EditorView.theme({
   '.cm-foldGutter .cm-gutterElement': {
     padding: '0 4px',
   },
+  '.cm-highlightSpace': {
+    backgroundImage: 'radial-gradient(circle at 50% 55%, #5c6370 20%, transparent 5%)',
+  },
+  '.cm-highlightTab': {
+    backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="20"><path stroke="%235c6370" stroke-width="1" fill="none" d="M1 10H196L190 5M190 15L196 10M197 4L197 16"/></svg>')`,
+  },
   '.cm-matchingBracket': {
     backgroundColor: '#515a6b',
     outline: 'none',
@@ -102,6 +108,7 @@ export function createEditor(parent, onExecute, onChange) {
     },
   ]);
 
+  const whitespace = new Compartment();
   const state = EditorState.create({
     doc: '',
     extensions: [
@@ -126,6 +133,7 @@ export function createEditor(parent, onExecute, onChange) {
       qHighlightStyle,
       darkTheme,
       EditorView.lineWrapping,
+      whitespace.of([]),
       EditorView.updateListener.of((u) => {
         if (u.docChanged && onChange) onChange();
       }),
@@ -143,6 +151,13 @@ export function createEditor(parent, onExecute, onChange) {
       view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: text },
       });
+    },
+    /**
+     * Show or hide whitespace markers (spaces as dots, tabs as arrows)
+     * @param {boolean} on
+     */
+    setShowWhitespace(on) {
+      view.dispatch({ effects: whitespace.reconfigure(on ? highlightWhitespace() : []) });
     },
   };
 }
