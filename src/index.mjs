@@ -223,6 +223,20 @@ etMore.addEventListener('click', (e) => {
   document.getElementById('vw-menu-dropdown').classList.remove('open');
   etMenu.classList.toggle('open');
 });
+const etWhitespace = document.getElementById('et-whitespace');
+const WS_KEY = 'qpad3.showWhitespace';
+
+function setShowWhitespace(on) {
+  editor.setShowWhitespace(on);
+  etWhitespace.classList.toggle('checked', on);
+  try { localStorage.setItem(WS_KEY, on ? '1' : '0'); } catch (e) { /* ignore */ }
+}
+setShowWhitespace(localStorage.getItem(WS_KEY) === '1');
+
+etWhitespace.addEventListener('click', (e) => {
+  e.stopPropagation();
+  setShowWhitespace(!etWhitespace.classList.contains('checked'));
+});
 // Right-pane tab bar overflow (⋯) menu: REPL syntax highlighting toggle
 const vwMore = document.getElementById('vw-more');
 const vwMenu = document.getElementById('vw-menu-dropdown');
