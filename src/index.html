@@ -188,6 +188,7 @@
                 visibility: hidden;
             }
             .et-menu-item.checked .et-check { visibility: visible; }
+            .et-menu-item.disabled { color: #5c6370; pointer-events: none; }
             #editor-container {
                 flex: 1 1 auto;
                 overflow: hidden;
@@ -349,7 +350,7 @@
                     <div class="et-menu tab-menu">
                         <button id="vw-more" class="et-more" title="More">&#8943;</button>
                         <div class="et-menu-dropdown" id="vw-menu-dropdown">
-                            <div class="et-menu-item" id="vw-highlight">
+                            <div class="et-menu-item" id="vw-highlight" data-tab="repl">
                                 <span class="et-check">&#10003;</span>Syntax highlighting
                             </div>
                         </div>

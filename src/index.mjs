@@ -46,8 +46,15 @@ window.plot = (chartType, data, config) => {
 const tabBar = document.querySelector('.tab-bar');
 const tabs = tabBar.querySelectorAll('.tab');
 
+// Menu items carrying data-tab="..." are only enabled while that tab is active
+function syncTabMenuItems(tabName) {
+  tabBar.querySelectorAll('.et-menu-item[data-tab]').forEach(item =>
+    item.classList.toggle('disabled', item.dataset.tab !== tabName));
+}
+
 function switchTab(tabName) {
   tabs.forEach(t => t.classList.toggle('tab-active', t.dataset.tab === tabName));
+  syncTabMenuItems(tabName);
   viewerContainer.style.display = tabName === 'repl' ? 'flex' : 'none';
   gridContainer.style.display = tabName === 'grid' ? 'flex' : 'none';
   plotContainer.style.display = tabName === 'plot' ? 'flex' : 'none';
@@ -255,6 +262,8 @@ vwMore.addEventListener('click', (e) => {
   etMenu.classList.remove('open');
   vwMenu.classList.toggle('open');
 });
+vwMenu.addEventListener('click', (e) => e.stopPropagation());
+syncTabMenuItems(tabBar.querySelector('.tab.tab-active').dataset.tab);
 vwHighlight.addEventListener('click', (e) => {
   e.stopPropagation();
   setReplHighlight(!vwHighlight.classList.contains('checked'));
