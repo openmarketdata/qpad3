@@ -66,13 +66,14 @@ function tokenBase(stream, state) {
     }
   }
 
-  if (/\s/.test(c)) {
-    if (stream.peek() === "/") {
-      stream.skipToEnd();
-      return "comment";
-    }
-    return null; // whitespace
+  // token() eats leading whitespace before calling us, so a "/" that is not
+  // at line start is a comment iff the character before it is whitespace
+  if (c === "/" && /\s/.test(stream.string.charAt(stream.pos - 2))) {
+    stream.skipToEnd();
+    return "comment";
   }
+
+  if (/\s/.test(c)) return null; // whitespace
 
   if (c === '"') {
     return (state.tokenize = tokenString)(stream, state);
