@@ -9,11 +9,27 @@ import perspective from '@finos/perspective';
 import '@finos/perspective-viewer';
 import '@finos/perspective-viewer-datagrid';
 import '@finos/perspective-viewer-d3fc';
+import { makeTable, tableToIPC, vectorFromArray, Int64, Int32, Float64, Utf8, Bool } from 'apache-arrow';
 // Perspective ships its toolbar icons and button styling as CSS custom
 // properties (base64 data-URIs) defined by a theme stylesheet. Without a theme
 // loaded the icon/button slots render as bare red placeholder blocks, so the
 // dark theme is bundled and applied to match the rest of the app.
 import '@finos/perspective-viewer/dist/css/pro-dark.css';
+
+// q type char -> Arrow column type (what Perspective ingests), the Perspective
+// schema type it yields, and how a prepared cell is cast for the Arrow builder.
+// q ±0W infinities become null in integer columns (Perspective has no integer
+// infinity); anything not listed is rendered as text.
+const finiteOrNull = v => (Number.isFinite(v) ? v : null);
+const INT = { arrow: Int32, psp: 'integer', cast: finiteOrNull };
+const COLUMN_TYPES = {
+  b: { arrow: Bool, psp: 'boolean', cast: v => (v == null ? null : !!v) },
+  x: INT, h: INT, i: INT,
+  j: { arrow: Int64, psp: 'integer', cast: v => (Number.isFinite(v) ? BigInt(Math.trunc(v)) : null) },
+  e: { arrow: Float64, psp: 'float', cast: v => (v == null || Number.isNaN(v) ? null : v) },
+  f: { arrow: Float64, psp: 'float', cast: v => (v == null || Number.isNaN(v) ? null : v) },
+  string: { arrow: Utf8, psp: 'string', cast: v => (v == null ? null : String(v)) },
+};
 
 /**
  * Create and mount a Perspective grid viewer
@@ -169,30 +185,34 @@ export function createGrid(container) {
    */
   function inferSchema(meta) {
     const schema = {};
-    const typeMap = {
-      'b': 'boolean',     // boolean
-      'g': 'string',      // GUID
-      'x': 'integer',     // byte
-      'h': 'integer',     // short
-      'i': 'integer',     // int
-      'j': 'integer',     // long
-      'e': 'float',       // real
-      'f': 'float',       // float
-      'c': 'string',      // char
-      's': 'string',      // symbol
-      'p': 'string',      // timestamp (rendered in q text form)
-      'm': 'date',        // month
-      'd': 'string',      // date (rendered in q text form)
-      'z': 'string',      // datetime (rendered in q text form)
-      'n': 'string',      // timespan
-      'u': 'string',      // minute
-      'v': 'string',      // second
-      't': 'string',      // time
-    };
     for (let i = 0; i < meta.c.length; i++) {
-      schema[meta.c[i]] = typeMap[meta.t[i]] || 'string';
+      schema[meta.c[i]] = (COLUMN_TYPES[meta.t[i]] || COLUMN_TYPES.string).psp;
     }
     return schema;
+  }
+
+  /**
+   * Encode prepared column data as an Arrow IPC stream for Perspective.
+   *
+   * Perspective's JSON ingest path stores every "integer" column as int32, so
+   * q longs beyond ±2^31 wrap (2^31 shows as -2147483648) and JSON updates onto
+   * an int64 column corrupt the values. Arrow is the only input format that
+   * carries int64, so table data always travels this way. Longs stay exact
+   * inside Perspective (sort/filter/aggregate); the datagrid itself still
+   * renders through JS doubles, so display is exact up to ±2^53.
+   *
+   * @param {object} clean  Output of prepareData (null for q nulls)
+   * @param {object} meta   { c: string[], t: string[] } from Symbol.for('meta')
+   * @returns {Uint8Array}  Arrow IPC stream bytes
+   */
+  function toArrow(clean, meta) {
+    const cols = {};
+    for (let i = 0; i < meta.c.length; i++) {
+      const name = meta.c[i];
+      const { arrow, cast } = COLUMN_TYPES[meta.t[i]] || COLUMN_TYPES.string;
+      cols[name] = vectorFromArray(clean[name].map(cast), new arrow());
+    }
+    return tableToIPC(makeTable(cols), 'stream');
   }
 
   /**
@@ -230,6 +250,7 @@ export function createGrid(container) {
     const meta = data[Symbol.for('meta')];
     const clean = prepareData(data, meta);
     const desiredSchema = meta ? inferSchema(meta) : clean;
+    const payload = meta ? toArrow(clean, meta) : clean;
 
     // (Re)create the table on first call or whenever the schema changes, so a
     // new query with different columns replaces the grid instead of being
@@ -238,18 +259,23 @@ export function createGrid(container) {
       !table || schemaChanged(await table.schema(), desiredSchema, !!meta);
 
     if (recreate) {
+      // Build the table from the data itself (not from desiredSchema): a
+      // schema-created "integer" column is int32, whereas an Arrow Int64
+      // column keeps q longs intact.
       const w = await getWorker();
-      const next = await w.table(desiredSchema);
+      const next = await w.table(payload);
       await viewer.load(next);
       if (table) await table.delete();
       table = next;
-    } else if (!append) {
+      return;
+    }
+
+    if (!append) {
       // Reload: drop the existing rows so the incoming data replaces them
       // rather than being appended to the previous result.
       await table.clear();
     }
-
-    await table.update(clean);
+    await table.update(payload);
   }
 
   return {
