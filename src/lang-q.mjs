@@ -240,7 +240,7 @@ export const qHighlightStyle = syntaxHighlighting(HighlightStyle.define([
   { tag: tags.atom, color: '#e5c07b' },
   { tag: tags.number, color: '#d19a66' },
   { tag: tags.comment, color: '#5c6370', fontStyle: 'italic' },
-  { tag: tags.variableName, color: '#e06c75' },
+  { tag: tags.variableName, color: '#f0a3b5' },
   { tag: tags.meta, color: '#be5046' },
   { tag: tags.invalid, color: '#ffffff', backgroundColor: '#e05252' },
 ]));
