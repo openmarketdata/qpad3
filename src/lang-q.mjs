@@ -242,5 +242,5 @@ export const qHighlightStyle = syntaxHighlighting(HighlightStyle.define([
   { tag: tags.comment, color: '#5c6370', fontStyle: 'italic' },
   { tag: tags.variableName, color: '#e06c75' },
   { tag: tags.meta, color: '#be5046' },
-  { tag: tags.invalid, color: '#282c34', backgroundColor: '#f0a3b5' },
+  { tag: tags.invalid, color: '#282c34', backgroundColor: '#f6c6d2' },
 ]));
