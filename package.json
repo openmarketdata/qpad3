@@ -6,7 +6,8 @@
     "type": "module",
     "scripts": {
         "build": "webpack --config webpack.config.mjs",
-        "clean": "rm -rf dist"
+        "build:compact": "webpack --config webpack.config.mjs --env compact",
+        "clean": "rm -rf dist dist-compact"
     },
     "devDependencies": {
         "buffer": "^6.0.3",
